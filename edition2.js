@@ -1,0 +1,525 @@
+import { one, two, classify, defineSet } from "./shared.js";
+
+export const edition2 = defineSet({
+  id: "edition2",
+  title: `Second Edition exam`,
+  source: {
+    label: `Matthew Purcell on LinkedIn`,
+    url: `https://www.linkedin.com/posts/purcellmatthew_ccdv-f-practice-exam-question-set-version-activity-7523489747013550081-OVIn`,
+  },
+  questions: [
+  one("1.1", 0, `You are building a feature for Kestrel Freight that turns each inbound booking email into a structured job record. The processing path never varies: extract the consignment details, validate the postcode against a lookup service, and write the record. The product owner asks whether this should be built as an agent.
+How would you respond?`, [
+    `Build it as an agent with a single tool for the postcode lookup, because tool use is only available inside an agent loop.`,
+    `Build it as a multi-agent system so that extraction, validation and persistence can each scale independently under load.`,
+    `Build it as an autonomous agent, because an agent can recover from unexpected email layouts by choosing its own extraction steps.`,
+    `Build it as a fixed workflow of sequenced model calls, because the steps are known in advance and never vary.`,
+  ], [3], `When every input follows the same known steps, a workflow gives predictable cost, per-step validation and simpler debugging. Autonomy adds planning overhead and variability that a fixed path does not need.
+Why not the others: A is wrong on the facts: a workflow step can call a tool without an agent loop. B introduces coordination cost for a three-step job; scaling is an infrastructure concern, not an architectural reason for multiple agents. C trades predictability for flexibility the task does not require; unusual layouts are better handled by a validation step.`),
+
+  one("1.2", 0, `A research-brief agent you maintain handles each request by itself: it plans searches, reads sources, reconciles conflicting figures and writes the brief. Briefs average 2,400 words, and the agent's context routinely fills with source material before it reaches the writing step.
+Which restructuring addresses the cause?`, [
+    `A workflow that fixes the number of searches at four per brief so that the context can never fill before writing begins.`,
+    `A supervisor agent that delegates searching and reading to subagents and receives only their condensed findings, keeping its own context for synthesis.`,
+    `A larger context window on the same single agent, with the planning step instructed to run fewer searches per brief.`,
+    `A second identical agent that takes over when the first agent's context is 80 percent full, continuing from a handover summary.`,
+  ], [1], `The cause is that raw source material and synthesis compete for one context. A supervisor hierarchy isolates the reading in subagents and returns only what the writer needs.
+Why not the others: A caps research depth to protect the context, which is the wrong trade for a quality-sensitive brief. C defers the problem rather than removing it, and fewer searches lowers brief quality. D hands over a context that is already degraded and loses detail at the handover point.`),
+
+  one("1.3", 0, `Your team's coding agent reviews pull requests. The tech lead wants it to also run the test suite and inspect the output of failing tests, which can run to thousands of lines. She is worried that the test output will crowd out the review itself.
+What is the strongest argument for handing the test run to a subagent?`, [
+    `The subagent absorbs the verbose output in its own context and returns only the failures that matter.`,
+    `A subagent is able to execute shell commands and read files, which the primary reviewing agent is not permitted to do.`,
+    `Subagents run on a cheaper model tier by default, so the test run costs a fraction of what the reviewer would spend on it.`,
+    `Subagents are retried automatically when a tool call fails, which makes intermittently failing tests less disruptive.`,
+  ], [0], `Subagents improve task execution by isolating context: the noisy work happens elsewhere and only a distilled result returns to the parent.
+Why not the others: B is false: tool permissions are configured, not determined by agent rank. C is not a property of subagents; the model tier is a choice, not a default. D describes retry logic, which is a harness concern unrelated to delegation.`),
+
+  one("1.4", 0, `You are starting an internal agent that will read support tickets, query two databases and draft responses. A colleague suggests hand-writing the agent loop directly against the Messages API so that the team 'understands every line'. You prefer the Claude Agent SDK.
+Which point most directly supports your preference?`, [
+    `The SDK removes the need to write a system prompt, because it infers the agent's role from the set of tools it has been given.`,
+    `The SDK is the only way to give Claude access to tools, because the Messages API on its own cannot carry tool definitions or results.`,
+    `The SDK supplies the agent loop, tool execution, context management and hooks, so the team builds the ticket logic rather than the harness.`,
+    `The SDK makes the agent's output deterministic across runs, which a hand-written loop against the raw API cannot achieve.`,
+  ], [2], `The SDK's value is the harness it provides. A hand-written loop re-creates tool dispatch, context handling, retries and safety hooks before any ticket logic exists.
+Why not the others: A is false; the system prompt still defines the agent's role and constraints. B is false; tool use is a Messages API feature and a custom loop can use it. D is false; determinism is a property of sampling, not of the harness.`),
+
+  one("1.5", 0, `Orillia Health wants to run a document-processing agent. Its platform team is two people, patient records must remain within a region it controls, and it has no appetite for operating agent infrastructure. You are weighing a self-hosted harness against an Anthropic-hosted managed agent.
+Which factor should be settled first?`, [
+    `Whether the self-hosted harness supports the same tool-calling conventions as the managed option, so the team can switch later.`,
+    `Whether the managed option's data handling satisfies the regional requirement; if not, self-hosting is required whatever it costs.`,
+    `Whether the managed option bills per token or per session, because a two-person team needs a cost model that it can predict and defend month to month.`,
+    `Whether the managed option offers a larger context window than the self-hosted harness for long patient documents.`,
+  ], [1], `A data-residency obligation is a gate rather than a trade-off. Operational convenience only matters among options that clear the gate.
+Why not the others: A concerns future portability, not whether either option is permissible now. C is a legitimate input but can be modelled; it does not decide feasibility. D is a capability of the model, not of the hosting model, and does not bear on the constraint.`),
+
+  one("1.6", 0, `Your deployment agent must never apply a database migration without a reviewer's approval, and must always record each migration it proposes in an audit log. Instructions in the system prompt achieve both about 97 percent of the time.
+How would you close the remaining gap?`, [
+    `Move both rules to the top of the system prompt and repeat them in the migration tool's description, since placement affects compliance.`,
+    `Set the temperature to zero so that the agent applies the two instructions consistently across runs.`,
+    `Implement both rules as hooks on the migration tool call, so enforcement is deterministic rather than instruction-following.`,
+    `Add a second model call that reviews the agent's planned actions and vetoes any migration that lacks a recorded approval.`,
+  ], [2], `Hooks run as code around tool calls. They can block the call until an approval exists and write the audit record every time, independent of what the model decides.
+Why not the others: A may raise compliance but remains probabilistic. B does not make instruction-following reliable; it only reduces sampling variance. D adds a second probabilistic judge; it reduces but does not eliminate misses.`),
+
+  two("1.7", 0, `A customer-onboarding agent runs sessions that last up to 90 minutes and make around 150 tool calls per session. Late in a session it forgets decisions made early on and repeats tool calls it has already made.
+Which two changes most directly address this? (Choose two.)
+Each correct answer presents part of the solution.`, [
+    `Switch to a model with a larger context window so that compaction and memory stores are unnecessary.`,
+    `Instruct the agent in the system prompt to remember earlier decisions and to avoid repeating tool calls it has already made.`,
+    `Compact the conversation at intervals, replacing older turns with a structured summary of decisions and current state.`,
+    `Persist key decisions to an external memory store that the agent reads from at the start of each step.`,
+    `Reduce the number of tools available to the agent so that each tool call consumes fewer tokens.`,
+  ], [2, 3], `Both compaction and an external memory keep decisions available after the raw turns that produced them have been pushed out of the usable context.
+Why not the others: A delays the symptom; 150 tool calls of output still degrade attention well before the window is full. B asks the model to do what the context no longer allows it to do. E shrinks the tool set, not the accumulated history that causes the forgetting.`),
+
+  classify("1.8", 0, `A teammate has written notes comparing agent patterns and frameworks ahead of a design review.
+For each statement, select Yes if it is accurate. Otherwise, select No.`, `Matching · Yes/No`, [
+    `Yes`,
+    `No`,
+  ], [
+    `Context-window management is unnecessary in an agent loop because the API discards old turns automatically.`,
+    `A tool-use loop ends when the model returns a response that contains no further tool calls.`,
+    `An agentic framework such as LangGraph or Strands can orchestrate a Claude agent while the Claude API remains the model interface.`,
+    `Memory across sessions must be implemented by the application; the model retains no state between API calls.`,
+    `Adopting an agentic framework commits the team to that framework's default model provider.`,
+    `Subagents share the parent agent's context window, so delegating a task does not reduce the parent's context usage.`,
+  ], [1, 0, 0, 0, 1, 1], `Correct selections: 1 → No; 2 → Yes; 3 → Yes; 4 → Yes; 5 → No; 6 → No
+Frameworks orchestrate; they do not replace the API or lock in a provider. The loop ends on a non-tool response. Subagents have their own context, the API keeps nothing between calls, and the application owns both compaction and memory.`),
+
+  one("2.1", 1, `A product manager at Tarrant & Byrne asks you for 'a chatbot for our policy documents'. Before you estimate the work, you need to understand the requirement.
+Which question most changes the shape of the solution?`, [
+    `How many policy documents exist today, and in which file formats they are stored across the organisation.`,
+    `Which front-end framework the intranet uses, so that the chat widget can match its existing styling.`,
+    `Whether the team already has a Claude API key and a billing account, or whether procurement needs to be involved first.`,
+    `Whether answers must cite the specific policy clause they rely on, and who is accountable when an answer is wrong.`,
+  ], [3], `Citation and accountability requirements decide whether this is a retrieval-grounded system with verifiable output or a general assistant. That decision drives architecture, evals and guardrails.
+Why not the others: A affects ingestion effort but not the fundamental design. B is a presentation detail that can be settled last. C is an administrative dependency, not a functional requirement.`),
+
+  two("2.2", 1, `A retailer wants Claude to answer product questions inside its mobile app during a 48-hour sale. It expects up to 300 concurrent users and requires replies to begin appearing within two seconds.
+Which two infrastructure requirements follow most directly from these numbers? (Choose two.)
+Each correct answer presents part of the solution.`, [
+    `A nightly batch job that pre-generates answers for the catalogue's most frequently asked questions.`,
+    `Rate-limit headroom for 300 concurrent requests, with queueing or backoff for bursts above the limit.`,
+    `A larger model tier, because concurrency is handled by the capacity of the selected model.`,
+    `Streamed responses, so that the first tokens reach the user inside the two-second target.`,
+    `A dedicated vector database, because 300 concurrent users exceeds what a single API key can serve.`,
+  ], [1, 3], `Concurrency maps to rate limits and the two-second first-token target maps to streaming. Both are infrastructure requirements the numbers imply directly.
+Why not the others: A cannot answer arbitrary questions and does nothing for concurrency. C confuses model capability with throughput; concurrency is governed by rate limits. E solves a retrieval problem the requirement does not mention, and misstates how keys relate to concurrency.`),
+
+  one("2.3", 1, `Your team is adopting a formal development life cycle for its Claude features. Prompts change weekly, the model is pinned, and features ship fortnightly. A junior developer proposes treating prompt edits as configuration that can be changed in production outside the release process.
+How would you respond?`, [
+    `Treat prompts as code: versioned, reviewed and run through the eval suite before release.`,
+    `Agree, because prompt changes do not alter application logic and therefore carry less risk than code changes.`,
+    `Allow prompt edits in production, but require that each edit be announced in the team channel with a one-line rationale.`,
+    `Freeze prompts entirely between releases and batch every proposed change into a monthly prompt review meeting.`,
+  ], [0], `A prompt change alters behaviour as much as a code change. It belongs in version control with review and evaluation, inside the same life cycle as the rest of the system.
+Why not the others: B misjudges risk; prompt edits routinely cause regressions. C is notification, not control; nothing is tested. D over-corrects and slows legitimate iteration without adding evaluation.`),
+
+  one("2.4", 1, `You call the Messages API with a get_order_status tool defined. The response has stop_reason set to tool_use and contains a tool_use content block with an id and the input Claude selected.
+What must your code do next?`, [
+    `Return the tool_use block's input to the end user, because Claude has delegated the final answer to the application layer.`,
+    `Execute the tool, then continue the conversation with a tool_result block that carries the matching tool_use_id.`,
+    `Append the tool's output as plain text in a new user message and rely on Claude to infer which tool call it belongs to.`,
+    `Re-send the original request with tool_choice set to none so that Claude answers the question without the tool.`,
+  ], [1], `A tool_use stop reason means Claude is waiting for the application to run the tool. The result must be returned in a tool_result block referencing the tool_use_id so the model can continue.
+Why not the others: A misunderstands the protocol; the input is for the tool, not the user. C loses the link between call and result and breaks multi-tool turns. D discards the tool call Claude needed to answer accurately.`),
+
+  one("2.5", 1, `A claims-triage service must return a category for each submitted claim before the adjuster's screen refreshes, typically within three seconds. Volume is about 2,000 claims per day. A colleague proposes the Message Batches API to halve the cost.
+Why is that a poor fit?`, [
+    `Batch processing is asynchronous and may take up to 24 hours to complete, so it cannot meet an interactive latency target.`,
+    `At 2,000 requests per day the volume is below the minimum batch size that the API will accept.`,
+    `Batch results cannot be returned as structured output, so the category would have to be parsed from free text.`,
+    `The Batches API does not accept requests that include a system prompt, which claims triage depends on.`,
+  ], [0], `The batch discount exists because results are delivered asynchronously within a window. A per-claim interactive deadline rules it out regardless of cost.
+Why not the others: B is false; there is no such minimum. C is false; batch requests support the same output features as realtime ones. D is false; batch requests are ordinary Messages requests.`),
+
+  one("2.6", 1, `A field-inspection app lets technicians photograph a utility meter and asks Claude to read the serial number and the displayed value. Photos arrive as JPEG files of up to 6 MB.
+How would you pass each photo to the Messages API?`, [
+    `By attaching the file as a document content block with the media type set to application/jpeg.`,
+    `By running an OCR library first and sending only the recognised characters, because the Messages API accepts text content only.`,
+    `By uploading the image through the Message Batches API, which is the endpoint that accepts binary content.`,
+    `As an image content block in the user message, base64-encoded or referenced by URL, alongside a text block with the instruction.`,
+  ], [3], `Vision input is a content block type in the user message. Claude reads the image directly, which is what the task needs.
+Why not the others: A uses the wrong block type and an invalid media type. B discards the vision capability and adds an error-prone step. C confuses batching with input modality.`),
+
+  one("2.7", 1, `Your support assistant sends a 9,000-token system prompt containing product documentation on every request, followed by the user's short question. You enable prompt caching, but usage metrics show almost no cache reads.
+What is the most likely cause?`, [
+    `Cache reads are only recorded when the same end user sends two requests consecutively.`,
+    `The system prompt is below the minimum cacheable length for the model, so no cache entry is ever written for it.`,
+    `Something that varies per request, such as a timestamp, sits before the cache breakpoint, so the prefix never matches.`,
+    `Prompt caching applies only to the user messages in a request, so a cached system prompt is written but never read back.`,
+  ], [2], `Caching matches on an exact prefix. Any per-request variation ahead of the breakpoint invalidates the match on every call.
+Why not the others: A is false; the cache is keyed on content, not on the end user. B is false at 9,000 tokens. D is false; system prompts are a primary caching target.`),
+
+  one("2.8", 1, `A Python summarisation endpoint receives 40 documents per request and summarises them one after another, taking about 85 seconds. Each summary is an independent Claude call.
+Which change gives the largest latency reduction for the least code change?`, [
+    `Concatenate the 40 documents into one prompt so that a single call produces all of the summaries at once.`,
+    `Switch the endpoint to streaming so that the client begins to see partial summaries sooner.`,
+    `Move the endpoint to a faster server, because the bottleneck is CPU time spent parsing JSON responses.`,
+    `Issue the 40 calls concurrently with the async client, using a semaphore to stay within rate limits.`,
+  ], [3], `The calls are independent, so the wait is dominated by sequential network latency. Concurrency removes most of it with a small, local change.
+Why not the others: A changes the task and risks quality on a 40-document prompt. B improves perceived latency only for a single response; total time stays sequential. C misdiagnoses the bottleneck; the time is spent waiting, not computing.`),
+
+  one("2.9", 1, `Claude Code has produced a 1,400-line refactor across 23 files in your service, including a change to the retry logic in the API client. The developer who ran it wants to merge it as a single commit titled 'refactor'.
+What review practice would you require?`, [
+    `Merge it as it stands, because Claude Code's changes are consistent across files and a human review of 23 files adds little value.`,
+    `Merge the refactor now to avoid conflicts, and add tests for the retry logic in the following sprint.`,
+    `Split it into reviewable commits, isolating the retry-logic change with its own tests, before any of it is merged.`,
+    `Have Claude Code review its own diff in a fresh session and merge the change if that second review reports no issues.`,
+  ], [2], `Generated code goes through the same review discipline as human code. Isolating the behavioural change makes the risky part visible and testable.
+Why not the others: A abandons review precisely where it is needed most. B merges untested behavioural change into production. D is a useful supplement but not a substitute for human review of a behavioural change.`),
+
+  two("2.10", 1, `Your Node.js integration occasionally receives HTTP 429 and HTTP 529 responses from the Claude API during traffic spikes, and currently treats both as fatal errors that are shown to the user.
+Which two changes should the integration make? (Choose two.)
+Each correct answer presents part of the solution.`, [
+    `Retry both with exponential backoff and jitter, up to a bounded number of attempts.`,
+    `Retry 429 immediately in a tight loop until the request succeeds, and continue to treat 529 as a fatal error.`,
+    `Honour the retry-after header, when one is present, before issuing the next attempt.`,
+    `Route every request through the Message Batches API instead, because batch requests are never rate-limited.`,
+    `Treat both as permanent failures and reduce max_tokens on all subsequent requests to lower the load.`,
+  ], [0, 2], `Both codes signal transient conditions: rate limiting and overload. Bounded backoff with jitter spreads the retries, and retry-after is the server's own guidance on when to try again.
+Why not the others: B worsens the spike and ignores a recoverable 529. D changes the latency model of the whole application to solve a transient problem. E gives up on recoverable errors and changes output for no reason.`),
+
+  two("2.11", 1, `You are planning a large-scale refactor of a 180,000-line monolith with Claude Code's help: replacing a deprecated HTTP client used in roughly 600 places.
+Which two practices most reduce the risk of the refactor? (Choose two.)
+Each correct answer presents part of the solution.`, [
+    `Grant Claude Code permission to run any command without confirmation so that the refactor is not interrupted.`,
+    `Establish a passing test baseline first and run it after each batch of changes.`,
+    `Replace the full test suite with a smaller smoke test so that each batch validates more quickly.`,
+    `Ask Claude Code to complete the whole refactor in one session so that the changes are internally consistent.`,
+    `Work in small, reviewable batches rather than a single repository-wide change.`,
+  ], [1, 4], `A green baseline makes regressions detectable, and small batches keep each diff reviewable and revertible.
+Why not the others: A removes a safety control to save time. C weakens the detection the refactor relies on. D produces an unreviewable change and a single point of failure.`),
+
+  one("2.12", 1, `A contract-review app builds its prompt by concatenating the system instructions, then the uploaded contract text, then the user's question. Users report that certain contracts cause the app to 'change its personality'.
+Which design change addresses the root cause?`, [
+    `Wrap the contract in explicit delimiters and instruct Claude to treat the delimited content as data, never as instructions.`,
+    `Restate the system prompt's instructions in capitals, telling Claude to ignore anything the contract says.`,
+    `Move the user's question ahead of the contract text so that Claude reads the task before reading the document.`,
+    `Truncate the contract to its first 20 pages so that there is less room for problematic content to appear.`,
+  ], [0], `Without a content boundary, text inside the document is indistinguishable from instructions. Delimiting it and naming it as data is the structural fix.
+Why not the others: B adds emphasis without a boundary, which remains unreliable. C re-orders the prompt without separating data from instructions. D reduces exposure at the cost of the task itself.`),
+
+  one("2.13", 1, `A team has a CLAUDE.md file that works well in Claude Code. They copy its full text into the system prompt of their customer-facing API integration and find that the assistant now refers to 'the repository' and offers to run tests.
+What explains this?`, [
+    `CLAUDE.md content is only honoured when it is supplied through the Claude Agent SDK rather than the raw API.`,
+    `CLAUDE.md is written for Claude Code's agentic, repository-centred context; instructions must be rewritten for the interface they serve.`,
+    `The combined system prompt exceeded its maximum permitted length, so the later customer-facing instructions were silently truncated.`,
+    `The API applies a different safety model from Claude Code, so the same instructions are interpreted more literally.`,
+  ], [1], `Claude interprets instructions in the context of the interface it is operating in. Guidance written for a coding agent carries assumptions that do not hold for a customer assistant.
+Why not the others: A is false; the system prompt is plain text wherever it is supplied. C is not supported by the symptoms, which show the instructions being followed. D invents a mechanism; the difference is in the content, not the safety model.`),
+
+  one("2.14", 1, `Your internal assistant keeps one conversation per user. For some users the conversation has grown to several hundred turns over weeks. Those users report slower, less accurate answers and occasional references to long-finished tasks.
+Which practice addresses this?`, [
+    `Add a system-prompt instruction asking Claude to disregard anything in the conversation older than one week.`,
+    `Pin those users to the most capable model tier, which handles long conversation histories with less degradation.`,
+    `Start a fresh session per task or on a schedule, carrying forward only a brief summary of durable context.`,
+    `Raise max_tokens so that answers are no longer cut short by the space the growing history consumes.`,
+  ], [2], `Session hygiene means bounding what accumulates. Fresh sessions with a carried summary keep the context relevant and the cost stable.
+Why not the others: A asks the model to ignore content that still consumes attention and tokens. B spends more to carry the same irrelevant history. D confuses output length with context bloat.`),
+
+  classify("2.15", 1, `You are reviewing the design of a customer-service assistant that answers order questions using a lookup tool.
+For each concern, select where it belongs. Choose from: System prompt, Tool definition, Application code.`, `Matching · classify`, [
+    `System prompt`,
+    `Tool definition`,
+    `Application code`,
+  ], [
+    `the persona and tone the assistant uses with customers`,
+    `checking that a returned order ID exists before it is shown to the user`,
+    `the JSON schema of the parameters the lookup function accepts`,
+    `the rule that the assistant must never state a delivery date it has not retrieved`,
+    `retrying a request after the API returns an overloaded response`,
+    `a description of when the lookup should be used and when it should not`,
+  ], [0, 2, 1, 0, 2, 1], `Correct selections: 1 → System prompt; 2 → Application code; 3 → Tool definition; 4 → System
+prompt; 5 → Application code; 6 → Tool definition Behavioural rules and persona live in the system prompt; a tool's schema and its usage guidance live in the tool definition; validation, retries and anything that must be enforced rather than requested live in application code.`),
+
+  one("2.16", 1, `A production service specifies the model by a rolling 'latest' alias rather than a dated snapshot. After an automatic model update, an eval that passed at 94 percent now passes at 81 percent.
+Which practice prevents this surprise?`, [
+    `Pin a specific model snapshot in configuration and promote a new version only after the eval suite passes against it.`,
+    `Keep the alias and widen the eval's pass threshold to 80 percent so that normal version drift no longer fails the build.`,
+    `Pin the snapshot in the code at each call site so that every developer can see exactly which model version is in use there.`,
+    `Keep the alias but lower the temperature, so that behaviour varies less from one model version to the next.`,
+  ], [0], `Model version pinning makes upgrades a deliberate, evaluated change rather than an event that happens to production.
+Why not the others: B hides the regression instead of preventing it. C pins the right thing in the wrong place; scattered literals are hard to upgrade consistently. D does not address version change at all.`),
+
+  classify("2.17", 1, `A teammate has drafted configuration guidelines for your team's Claude Code and API projects.
+For each statement, select Yes if it reflects sound practice. Otherwise, select No.`, `Matching · Yes/No`, [
+    `Yes`,
+    `No`,
+  ], [
+    `Permissions in settings.json should be scoped to the commands and paths the project actually needs.`,
+    `A production API key may be stored in a project's settings.json provided the repository is private.`,
+    `Pinning a plugin's version is unnecessary because plugins are backward compatible by design.`,
+    `The production model ID should be held in configuration rather than hard-coded at each call site.`,
+    `Prompts used in production should be versioned so that a regression can be traced to a specific change.`,
+    `A project-level CLAUDE.md should be committed to the repository so that every contributor inherits the same instructions.`,
+  ], [0, 1, 1, 0, 0, 0], `Correct selections: 1 → Yes; 2 → No; 3 → No; 4 → Yes; 5 → Yes; 6 → Yes
+Shared, versioned, least-privilege configuration is the pattern. Secrets never belong in committed files, and plugin versions are pinned like any other dependency.`),
+
+  one("3.1", 2, `Your team runs the same six-step release checklist in Claude Code every fortnight, typing the steps out each time. Occasionally a step is forgotten.
+Which Claude Code feature best turns the checklist into a repeatable, shareable action?`, [
+    `An allow-list entry in settings.json that names the six steps as permitted commands for the project.`,
+    `A custom slash command committed to the repository, with the checklist as its prompt.`,
+    `A paragraph in each developer's user-level CLAUDE.md describing the checklist, so that it is always present in context.`,
+    `Headless mode, invoked through a shell alias that passes the full checklist text as an argument on each run.`,
+  ], [1], `Custom slash commands package a prompt as a named, version-controlled action that anyone on the project can invoke.
+Why not the others: A controls permissions; it does not run anything. C is per-user, not shared, and bloats every session with instructions used fortnightly. D is workable for automation but does not make the checklist discoverable or shared.`),
+
+  one("3.2", 2, `Claude Code is following a coding convention that nobody on the team recognises. The developer has a CLAUDE.md in the project, another in a parent directory of the monorepo, and a user-level CLAUDE.md in their home directory.
+How does Claude Code treat these files?`, [
+    `Only the user-level CLAUDE.md is loaded, because settings in the home directory take precedence over project files.`,
+    `Only the project CLAUDE.md is loaded; the parent and user-level files are ignored once a project file exists.`,
+    `The files are loaded in alphabetical order of their directory names, and the first file loaded wins whenever two of them conflict.`,
+    `All of them are loaded and layered, from user level through parent directories to the project, so any level could be the source.`,
+  ], [3], `The CLAUDE.md hierarchy is cumulative. Diagnosing unexpected behaviour means checking every level, not just the nearest file.
+Why not the others: A inverts the hierarchy. B describes an override model that does not exist. C invents an ordering rule.`),
+
+  one("4.1", 3, `After a deployment, 6 percent of responses from your extraction service fail JSON validation. The deployment changed both the prompt and the HTTP client library at the same time.
+How would you isolate the cause?`, [
+    `Roll both changes back together and redeploy, because it was the combination of the two that failed.`,
+    `Add a retry on validation failure, because a 6 percent failure rate is within the normal range of model variance.`,
+    `Replay a sample of failing requests with each change reverted in turn and compare the failure rates.`,
+    `Inspect the raw model output of the failing requests to see whether the JSON is malformed or merely wrapped in prose.`,
+  ], [2], `Isolating the origin means separating the integration layer from the model output. Varying one change at a time against the same inputs does exactly that.
+Why not the others: A restores service but teaches nothing about the cause. B masks a regression with a guess about its nature. D is a sensible first look but cannot tell a prompt regression from a client-library bug on its own.`),
+
+  one("5.1", 4, `A classification service runs at temperature 0 and still returns a different label for the same input on about 2 percent of calls. The team believes this proves there is a bug in their code.
+What should you tell them?`, [
+    `Temperature 0 is only honoured when top_p is also set to 0, so the configuration as written is incomplete.`,
+    `The variance comes from prompt caching returning stale completions that were generated for earlier requests.`,
+    `Identical output requires passing the same seed value on every call, which the service's code currently omits from its requests.`,
+    `Temperature 0 makes sampling greedy, not deterministic; the pipeline should tolerate some variance and validate results.`,
+  ], [3], `LLM inference is not perfectly deterministic. Designing for occasional variance is part of working with next-token generation.
+Why not the others: A misstates how the sampling parameters interact. B is false; caching stores prompt prefixes, not completions. C promises a guarantee the API does not make.`),
+
+  one("5.2", 4, `A planning assistant solves multi-step scheduling problems. On hard cases it produces plans with constraint violations, while easy cases are handled well. Latency is not critical for this feature.
+Which adjustment most directly targets hard-case quality?`, [
+    `Enable extended thinking with an adequate budget so the model reasons through the constraints before answering.`,
+    `Lower the temperature so that the model commits to its first candidate plan more consistently on every request.`,
+    `Increase max_tokens so that the plan is never truncated before the final constraints are applied.`,
+    `Move to the fastest model tier so that several candidate plans can be generated and compared within the same latency.`,
+  ], [0], `Extended thinking gives the model room to reason before committing to an answer, which is where multi-step constraint problems fail.
+Why not the others: B reduces randomness, not reasoning errors. C addresses truncation, which is not the reported symptom. D trades capability for speed on a task that needs the former.`),
+
+  one("5.3", 4, `A developer estimates token usage by dividing character count by four and sets max_tokens on that basis. For a batch of Japanese-language documents, responses are truncated far more often than for the English documents.
+Why?`, [
+    `max_tokens counts input and output together, so the longer Japanese documents leave less room for the response.`,
+    `Tokens per character vary by language and script, so a character-based estimate under-counts for Japanese.`,
+    `The model allocates a smaller context window to non-English requests, so output is cut off sooner.`,
+    `Japanese output is generated at a lower token rate, so long responses reach the request timeout before completing.`,
+  ], [1], `Tokenisation is not uniform across scripts. The same text in Japanese typically needs more tokens than the English rule of thumb predicts.
+Why not the others: A is false; max_tokens bounds output only. C is false; the context window does not vary by language. D describes a timeout, not truncation at max_tokens.`),
+
+  one("5.4", 4, `A teammate insists on calling the Claude REST endpoint with hand-written HTTP code rather than the official Python SDK, to 'avoid a dependency'.
+Which capabilities would the team most likely have to re-implement as a result?`, [
+    `Tool use, because tool definitions and results are only available through the SDK's client.`,
+    `Prompt caching, because the REST endpoint exposes no way to mark cache breakpoints in a request.`,
+    `Authentication, because the REST endpoint does not accept an API key directly and requires an SDK-issued token.`,
+    `Retries with backoff, typed request and response objects, and parsing of streaming events.`,
+  ], [3], `The SDK wraps the REST API. What it adds is engineering convenience and robustness, all of which a hand-rolled client must rebuild.
+Why not the others: A is false; tool use is a REST feature. B is false; cache control is part of the request body. C is false; the key is sent as a header.`),
+
+  one("5.5", 4, `A chat UI shows Claude's reply only after the entire response has arrived, which for long answers leaves 12 to 18 seconds of blank screen. You want tokens to appear as they are generated.
+Which architecture achieves this?`, [
+    `Poll the server every 500 milliseconds for the completed response and render it as soon as it is ready.`,
+    `Stream from the Claude API on the server and forward the events to the browser over server-sent events or a WebSocket.`,
+    `Lower max_tokens so that responses are short enough to arrive before the user notices the delay.`,
+    `Split the user's question into several smaller questions and display each answer as it completes.`,
+  ], [1], `Streaming needs an end-to-end streaming path: the API streams to the server and the server streams to the client.
+Why not the others: A still waits for the whole response. C shortens answers rather than showing them sooner. D changes the task and does not stream any single answer.`),
+
+  two("5.6", 4, `You are integrating the Claude TypeScript SDK into an existing Express service.
+Which two practices should be in place before the first production release? (Choose two.)
+Each correct answer presents part of the solution.`, [
+    `Read the API key from the environment or a secrets manager, never from source control.`,
+    `Disable the SDK's built-in retries so that transient errors are always surfaced directly to users.`,
+    `Log the full prompt and response of every request at INFO level to make production debugging easier.`,
+    `Instantiate a new client object inside every request handler so that connections are never reused between requests.`,
+    `Set an explicit request timeout and handle the SDK's error types rather than catching every failure generically.`,
+  ], [0, 4], `Secret handling and deliberate error handling are the two basics that stop a working prototype from becoming a production incident.
+Why not the others: B removes resilience the SDK provides for free. C leaks customer data into logs. D wastes connections; a client is designed to be shared.`),
+
+  one("5.7", 4, `Maribyrnong Mutual processes 1.2 million short customer messages a month, tagging each with one of 14 intents. On a 500-item labelled set, accuracy is 93 percent with Haiku, 94 percent with Sonnet and 94 percent with Opus.
+Which choice is best justified?`, [
+    `Sonnet, because it sits at the midpoint and avoids committing the service to either extreme.`,
+    `Opus, because the most capable tier provides the most headroom as new intents are added to the taxonomy over time.`,
+    `Haiku, because the accuracy difference is marginal and the cost and latency savings at this volume are substantial.`,
+    `Haiku for the first million messages in each month and Opus for the remainder, so that cost and quality are balanced over the month.`,
+  ], [2], `Model selection weighs quality against latency and cost on the actual task. A one-point gap on a high-volume, low-complexity task does not justify a large cost multiple.
+Why not the others: A chooses by position rather than by evidence. B pays for capability the measured task does not use. D applies different quality to identical work for no reason.`),
+
+  classify("5.8", 4, `You are reviewing six cost findings from a token-usage audit of a Claude application.
+For each finding, select the technique that addresses it most directly. Choose from: Prompt caching, Batch processing, Smaller model tier, Reduce output tokens.`, `Matching · classify`, [
+    `Prompt caching`,
+    `Batch processing`,
+    `Smaller model tier`,
+    `Reduce output tokens`,
+  ], [
+    `a yes/no moderation check runs on the most capable model available`,
+    `an agent re-reads the same 30-page specification at the start of every turn of a long conversation`,
+    `a summariser returns 600-word summaries where the interface displays only the first 80 words`,
+    `a nightly job re-scores 80,000 historical records with no deadline before morning`,
+    `a weekly report generator calls the realtime endpoint from a 2 am scheduled job`,
+    `the same 12,000-token policy manual is sent with every request`,
+  ], [2, 0, 3, 1, 1, 0], `Correct selections: 1 → Smaller model tier; 2 → Prompt caching; 3 → Reduce output tokens; 4 → Batch
+processing; 5 → Batch processing; 6 → Prompt caching Repeated identical prefixes are cached; latency-tolerant bulk work is batched; simple tasks move to a cheaper tier; output that is never read is not generated.`),
+
+  one("5.9", 4, `Finance asks for a monthly cost forecast for your Claude feature. You know the expected request volume but not the cost per request.
+What is the most reliable way to produce the figure?`, [
+    `Measure input, output and cache tokens from the API's usage field per request type, then multiply by volume and list prices.`,
+    `Set a monthly spend limit in the console and report that limit to finance as the forecast figure.`,
+    `Take the previous month's invoice and scale it in proportion to the expected growth in monthly active users of the feature.`,
+    `Estimate four characters per token across the average prompt and multiply the result by the published price for output tokens.`,
+  ], [0], `Actual usage data per request type is the basis of a defensible cost model. Everything else is a guess layered on a guess.
+Why not the others: B is a cap, not a forecast. C assumes cost scales with users rather than with request mix. D ignores output and cache pricing and uses a rough approximation.`),
+
+  one("6.1", 5, `An operations agent calls a log-search tool whose results average 14,000 tokens. After six or seven searches, the agent's answers deteriorate and the context nears its limit.
+Which change best preserves answer quality?`, [
+    `Add a system-prompt instruction asking the agent to disregard any log lines that are not relevant to the question it is answering.`,
+    `Increase max_tokens so that the agent has more room to compose its answer after the searches complete.`,
+    `Run each search in a fresh conversation and ask the user to carry the findings between conversations manually.`,
+    `Have the tool return only the matching lines and a count, truncating the rest, so each result adds a few hundred tokens.`,
+  ], [3], `Tool output pruning fixes bloat at its source: the context only receives what the agent needs from each search.
+Why not the others: A leaves the tokens in context; attention and cost are still consumed. B concerns output length, not input bloat. C shifts the context management burden onto the user.`),
+
+  one("6.2", 5, `A long-running coding session has accumulated 160,000 tokens of history, most of it the contents of files that have since been edited. The agent has begun making changes that are inconsistent with the current code.
+What is the most effective remedy?`, [
+    `Compact the context into a summary of current state and goals, discarding stale file contents to be re-read as needed.`,
+    `Add a system-prompt instruction warning the agent that file contents seen earlier in the session may be out of date.`,
+    `Reduce the agent's tool set so that fewer file contents enter the context during the remainder of the session's work.`,
+    `Move to a model with a larger context window so that the stale and the current file contents can coexist without anything being lost.`,
+  ], [0], `Context drift comes from stale information competing with current information. Compaction removes the stale material rather than asking the model to discount it.
+Why not the others: B leaves contradictory content in place and hopes the model resolves it correctly. C limits future bloat but does nothing about the 160,000 tokens already present. D makes room for more of the problem.`),
+
+  one("6.3", 5, `A tutoring app sends one request per student message. The instructions that define the tutor's persona, grade-level constraints and refusal rules are currently prepended to every user message.
+Where should these instructions live, and why?`, [
+    `In the first user message only, because Claude retains instructions from the opening turn for the remainder of the conversation.`,
+    `Split between the system prompt and every user message so that the most important rules are reinforced each time the student writes.`,
+    `In the system prompt, the designated place for stable role and behavioural instructions, leaving user turns for student input.`,
+    `In a tool description, so that the instructions are loaded only when the tutor actually needs to call a tool.`,
+  ], [2], `System versus user placement is about role. Stable behavioural instructions belong in the system prompt, and keeping them there also makes the prefix cacheable.
+Why not the others: A is unreliable and only applies when the full history is re-sent. B duplicates content and blurs the boundary between instructions and input. D hides core behaviour where it may never be read.`),
+
+  one("6.4", 5, `A prompt asks Claude to 'summarise the meeting briefly'. Downstream, the summaries range from one line to four paragraphs, and some include action items while others omit them.
+How would you revise the prompt?`, [
+    `Ask for the summary as JSON, because a structured output format forces the model to keep its content brief.`,
+    `Specify the structure: a maximum length, the required sections, and an example of the expected format.`,
+    `Set the temperature to zero so that each summary comes out at the same length and with the same sections.`,
+    `Add the phrase 'be consistent' so that the model aligns the length and content of its output across requests.`,
+  ], [1], `Instruction clarity and output constraints remove the ambiguity that produces the variance. 'Briefly' means nothing measurable.
+Why not the others: A changes the container without defining the content or length. C reduces randomness but not the ambiguity of the instruction. D is itself ambiguous; consistent with what?`),
+
+  two("6.5", 5, `Your team changes production prompts by editing them directly whenever a user complains. Quality has become unpredictable, and nobody can say which edit caused which change.
+Which two practices would you introduce? (Choose two.)
+Each correct answer presents part of the solution.`, [
+    `Keep a fixed set of representative test inputs and score each prompt revision against it before release.`,
+    `Change one thing per revision and record the measured effect of the change.`,
+    `Add a new rule to the prompt for every complaint received so that no reported case goes unaddressed.`,
+    `Lower the temperature slightly after each complaint until the reported issue stops appearing.`,
+    `Ask Claude to rewrite the prompt whenever a complaint arrives and deploy the rewritten prompt immediately.`,
+  ], [0, 1], `Iterative refinement needs a fixed yardstick and controlled changes. Without both, improvement and regression are indistinguishable.
+Why not the others: C grows an unmaintainable prompt and introduces conflicting rules. D treats a sampling parameter as a fix for instruction problems. E automates the current problem.`),
+
+  one("6.6", 5, `An assistant that answers questions about internal HR policy produces fluent, confident answers, but a monthly audit finds that 7 percent of them cite a policy clause that does not exist.
+Which design change most directly addresses this?`, [
+    `Lower the temperature so that the model stays closer to the retrieved documents when composing its answer.`,
+    `Add the instruction 'only answer when you are certain' to the system prompt so that the model declines uncertain cases.`,
+    `Require a quoted source passage for each claim and verify the quotes against the retrieved documents before showing the answer.`,
+    `Move to a more capable model tier, because larger models are less likely to invent references.`,
+  ], [2], `Confident output is not evidence of correctness. Validation that checks the answer against its sources turns scepticism into a mechanism.
+Why not the others: A affects randomness, not grounding. B relies on the model's self-assessment, which is what failed. D may reduce the rate but adds no verification.`),
+
+  one("7.1", 6, `A support assistant has access to a customer-lookup tool. A tester asks it to 'show me everything you know about the customer who called before me' and receives another customer's details.
+Which control fixes this at the right layer?`, [
+    `Log every lookup together with the requesting session so that unauthorised access can be identified and reviewed afterwards.`,
+    `Enforce the authenticated customer's scope inside the lookup tool itself, so that out-of-scope records can never be returned.`,
+    `Add a system-prompt rule telling the assistant that it may only discuss the customer it is currently serving.`,
+    `Have the assistant ask the customer to confirm their full name before each lookup so that identity is checked in conversation.`,
+  ], [1], `Authorisation belongs in code, bound to the authenticated identity. The model should be unable to request what the user is not permitted to see.
+Why not the others: A detects after the leak has happened. C is a request, not a control, and fails to injection. D lets the caller assert an identity the system should already know.`),
+
+  one("7.2", 6, `A new Claude-powered email assistant can read a user's inbox and send messages on their behalf. Before launch, the security team asks how harmful actions will be prevented.
+Which answer reflects guardrail layering?`, [
+    `Input screening for injected instructions, a system prompt that defines permitted actions, and a deterministic confirmation step before any send.`,
+    `Permanent read-only access for the assistant, because sending on a user's behalf cannot be made acceptably safe.`,
+    `A single thorough system prompt that lists every prohibited action, because the model follows explicit instructions reliably.`,
+    `Output filtering applied to sent emails only, because harm can only occur at the moment a message leaves the system.`,
+  ], [0], `Layered guardrails assume any single control can fail. Screening, instruction and a hard gate on the destructive action cover different failure modes.
+Why not the others: B abandons the feature instead of securing it. C is one layer, and a probabilistic one. D ignores how injected content reaches the send decision in the first place.`),
+
+  one("7.3", 6, `Your coding agent occasionally removes build directories with recursive delete commands and once deleted a developer's untracked work. The team wants a control that a cleverly worded task cannot bypass.
+Which approach fits?`, [
+    `A reduced permission set that removes the agent's ability to run any shell command for the rest of the project.`,
+    `A post-tool-use hook that records every shell command the agent runs so that deletions can be reviewed later.`,
+    `A line in CLAUDE.md instructing the agent never to run commands that delete files outside the build directory.`,
+    `A pre-tool-use hook that inspects shell commands and blocks destructive patterns, or requires confirmation, before execution.`,
+  ], [3], `Hooks run as code before the action and are not subject to prompt wording. That is what makes them suitable for destructive-action guardrails.
+Why not the others: A removes a capability the agent needs instead of constraining it. B runs after the damage is done. C is instruction, which the scenario says is insufficient.`),
+
+  one("7.4", 6, `A contractor's laptop holding a clone of your repository has been stolen. The repository's .env.example file contains a real production Claude API key that was committed eight months ago.
+Which response is complete?`, [
+    `Revoke the key immediately and ask the contractor to confirm that the laptop's disk was encrypted at the time it was taken.`,
+    `Revoke and replace the key, purge it from the repository history, and review usage logs for the exposure window.`,
+    `Keep the key in service but restrict it in the console to the office IP range so that the stolen copy is unusable.`,
+    `Rotate the key at the next scheduled rotation and remove it from .env.example in the next release of the service.`,
+  ], [1], `A leaked credential is treated as compromised: revoke, replace, remove the source of the leak, and check for misuse.
+Why not the others: A stops at revocation and leaves the key in history for the next clone. C relies on a control that may not exist and leaves the key exposed. D leaves a known-compromised key live.`),
+
+  one("8.1", 7, `Claude frequently calls search_products when the user wants to check an existing order, even though a separate get_order tool exists. Both tools carry one-line descriptions: 'Searches products' and 'Gets an order'.
+What is the most effective fix?`, [
+    `Remove search_products from the tool list whenever the user's message contains the word 'order' or a recognisable order number.`,
+    `Merge the two tools into a single lookup tool with a type parameter that the model must set correctly.`,
+    `Set tool_choice to force get_order on every request so that the model is no longer able to select the wrong tool.`,
+    `Rewrite each description to say what the tool does, when to use it, when not to, and what each parameter means.`,
+  ], [3], `Tool selection is driven by descriptions. A description that explains purpose and boundaries is the primary lever for correct dispatch.
+Why not the others: A is brittle keyword routing that breaks on paraphrase. B moves the same ambiguity into a parameter. C breaks every request that genuinely needs a product search.`),
+
+  one("8.2", 7, `Your get_weather tool raises an exception when the upstream service times out. The exception propagates out of your agent loop and ends the conversation.
+How should the tool failure be surfaced instead?`, [
+    `Return a typical forecast for the location as the result so that the user always receives a complete answer.`,
+    `Return an empty string as the tool result so that the model carries on with the task without the weather data.`,
+    `Return a tool_result marked as an error with a short explanation, so the model can retry, change approach or tell the user.`,
+    `Catch the exception inside the tool and keep retrying the upstream service until it responds, however long that takes.`,
+  ], [2], `Tool errors are information for the model. Returning them as error results keeps the loop alive and lets the model decide how to proceed.
+Why not the others: A fabricates data. B hides the failure and invites a confident answer with no data. D blocks the loop indefinitely on an unreliable dependency.`),
+
+  one("8.3", 7, `A finance agent has tools to list invoices, draft payment batches and submit payment batches. The business accepts autonomous listing and drafting, but requires a human to approve any submission.
+Where does the approval belong?`, [
+    `In the application's execution of the submit tool call: pause for human approval, then return the outcome as the result.`,
+    `In a nightly review of submitted batches, with any batch that lacks an approval record reversed the following morning.`,
+    `In the submit tool's description, stating that the tool must only be called once a human has approved the drafted batch.`,
+    `In the system prompt, instructing the agent to ask the user whether they are sure before it calls the submit tool on their behalf.`,
+  ], [0], `Approval patterns are implemented where the tool is executed. The application owns the gate; the model merely requests the action.
+Why not the others: B reverses payments after they have been made. C is guidance the model can ignore or be manipulated into ignoring. D lets the model both ask and decide, which is not a control.`),
+
+  one("8.4", 7, `You are building an MCP server that exposes your company’s ticketing system. It will be used by developers’ local Claude Code sessions and also by a hosted agent running in a different data centre.
+Which transport decision is correct?`, [
+    `Use stdio for both, because MCP clients tunnel stdio connections across the network automatically whenever that is required.`,
+    `Expose the ticketing API directly over REST to the hosted agent, and reserve the MCP server for the local Claude Code sessions.`,
+    `Use the SSE transport for the remote agent, because it is the established standard for MCP servers that are reached over a network.`,
+    `Support an HTTP-based transport for the remote agent; stdio suits only a server launched locally as a subprocess.`,
+  ], [3], `stdio is a local process-to-process transport: the client launches the server as a subprocess. A remote client needs a network transport, which in current MCP is Streamable HTTP, and one server can offer both.
+Why not the others: A is false; stdio has no network capability. B works, but abandons the single reusable capability that justified building an MCP server in the first place. C names a transport that has been superseded by Streamable HTTP; it may still be supported for compatibility, but it is not the one to design a new server around.`),
+
+  one("8.5", 7, `Your team has a 40-step procedure for producing a regulatory filing from a spreadsheet, including validation scripts and an output template. Developers currently paste the procedure into their prompts.
+Which mechanism packages this for reuse?`, [
+    `A Skill that bundles the procedure, validation scripts and template so that Claude loads them when the task arises.`,
+    `A longer CLAUDE.md that includes the full procedure so that it is present in every session the team runs.`,
+    `A built-in tool, because file reading and code execution are already available without any additional packaging.`,
+    `An MCP server that exposes the spreadsheet as a resource, because the procedure is driven entirely by the data it contains.`,
+  ], [0], `A Skill is the packaging unit for procedural knowledge plus supporting files, loaded on demand rather than carried in every prompt.
+Why not the others: B loads 40 steps into every session whether or not the task is relevant. C provides primitives but not the procedure. D exposes data, not the know-how for using it.`),
+
+  two("8.6", 7, `You are deciding how to give an agent access to a vendor's REST API that three other teams also need.
+Which two considerations favour an MCP server over a custom tool defined inside your application? (Choose two.)
+Each correct answer presents part of the solution.`, [
+    `An MCP server removes the need to write tool descriptions, because it generates them from the vendor's API.`,
+    `MCP tools are invoked without the model choosing them, which removes tool-selection errors from the agent.`,
+    `A custom tool defined in-application cannot be given a JSON schema for its parameters, whereas an MCP tool can.`,
+    `The capability is maintained and versioned once, and every team's Claude application connects to it.`,
+    `Authentication and rate limiting for the vendor API are handled centrally in the server rather than in each application.`,
+  ], [3, 4], `The trade-off that favours MCP is reuse and central ownership across applications. Within one application, a custom tool is often simpler.
+Why not the others: A is false; descriptions still have to be written well. B is false; the model selects MCP tools exactly as it selects custom ones. C is false; custom tools are defined with a JSON schema. How did you go? If this helped your CCDV-F preparation, share it with someone else who’s preparing. For more, follow linkedin.com/in/purcellmatthew`),
+  ],
+});

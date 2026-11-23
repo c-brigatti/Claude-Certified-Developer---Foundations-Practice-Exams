@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f7f7f5">
+  <title>Claude Certified Developer – Foundations · Practice Exams</title>
+  <meta name="description" content="Practice question sets for the Claude Certified Developer – Foundations (CCDV-F) certification, with scoring and a review of every answer.">
+  <link rel="canonical" href="https://c-brigatti.github.io/Claude-Certified-Developer---Foundations-Practice-Exams/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e2836'/%3E%3Crect x='8' y='19' width='16' height='4' rx='2' fill='%23c4480a'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="app.min.css">
+
+</head>
+<body>
+  <main class="shell">
+    <noscript><p class="intro">This practice exam needs JavaScript enabled.</p></noscript>
+    <header class="brand"><span class="brand-mark">CCDV-F</span><span id="brand-sets">Practice exams</span></header>
+
+    <section id="welcome">
+      <h1>Claude Certified Developer – Foundations</h1>
+      <p class="intro">Pick a set. Progress saves as you go, so you can close the tab and resume later. Every set ends with a score and a review of each answer.</p>
+      <div id="set-list" class="sets"></div>
+      <div class="welcome-foot">
+        <span>Questions are exam-style practice, not exam content.</span>
+        <button id="clear-progress" class="link-button" type="button">Clear saved progress</button>
+      </div>
+    </section>
+
+    <section id="exam" class="hidden">
+      <p id="exam-status" class="sr-only" role="status"></p>
+      <div class="exam-head">
+        <h2 id="domain-name"></h2>
+        <div class="meta"><span id="format-pill" class="pill"></span></div>
+      </div>
+      <div class="progress-row">
+        <span id="progress-label" class="progress-label"></span>
+        <div class="progress" role="progressbar" aria-label="Set progress" aria-valuemin="0"><div id="progress-bar"></div></div>
+      </div>
+      <article class="card">
+        <p id="question-title" class="question-title" tabindex="-1"></p>
+        <p id="question-prompt" class="question-prompt"></p>
+        <div id="options" class="options"></div>
+        <div class="nav">
+          <div class="nav-left"><button id="previous" class="secondary">← Previous</button><button id="exit" class="secondary">Save and exit</button></div>
+          <div class="nav-right"><button id="check" class="primary hidden" disabled>Check answer</button><button id="next" class="primary">Next question →</button><button id="finish" class="primary hidden">Finish set</button></div>
+        </div>
+        <div class="card-foot"><span id="saved-note">Progress saves automatically.</span></div>
+      </article>
+    </section>
+
+    <section id="results" class="hidden">
+      <div class="card">
+        <div class="result-top">
+          <div class="meta"><span id="result-kind" class="pill">Set complete</span></div>
+          <div id="score" class="score"></div>
+          <p id="score-caption"></p>
+        </div>
+        <h2 id="score-breakdown-heading" class="section-label">Score by domain</h2>
+        <table class="domain-scores">
+          <thead><tr><th scope="col">Domain</th><th scope="col">Correct</th></tr></thead>
+          <tbody id="domain-results"></tbody>
+        </table>
+      </div>
+      <div class="review-heading">
+        <h2>Answer review</h2>
+        <div class="filter" role="group" aria-label="Filter answer review">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="incorrect" aria-pressed="false">Incorrect</button>
+        </div>
+      </div>
+      <div id="review-list" class="review-list"></div>
+      <div class="bottom-actions"><button id="restart" class="secondary">Choose another set</button></div>
+    </section>
+  </main>
+
+  <script type="module" src="app.min.js"></script>
+</body>
+</html>

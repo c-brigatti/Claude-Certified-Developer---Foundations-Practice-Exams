@@ -1,0 +1,11 @@
+{
+  "name": "ccdv-f-practice-exams",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild app.js --bundle --minify --format=esm --target=es2022 --outfile=app.min.js && esbuild app.css --minify --outfile=app.min.css"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.0"
+  }
+}
